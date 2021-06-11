@@ -1,52 +1,50 @@
 const express = require('express');
-const path=require('path');
-const ejs=require('ejs');
-const Photo = require('./models/Photo');
-const mongoose=require('mongoose');
+const mongoose = require('mongoose');
+const fileUpload = require('express-fileupload');
+const methodOverride = require('method-override');
+const ejs = require('ejs');
+const photoController = require('./controllers/photoController')
+const pageController = require('./controllers/pageController');
 
 const app = express();
 
+//connect DB
 mongoose.connect('mongodb://localhost/pcat-test-db', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+}).then(()=> {
+  console.log('DB CONNECTED!')
+}).catch((err)=> {
+  console.log(err)
+})
 
-  useNewUrlParser:true,
-  useUnifiedTopology:true,
-});
+//TEMPLATE ENGINE
+app.set('view engine', 'ejs');
 
-//Template engine
-app.set("view engine", "ejs");
-
-//Middlewares
+//MIDDLEWARES
 app.use(express.static('public'));
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-
-//Routes
-
-app.get('/', async (req, res) => {
-  const photos = await Photo.find({});
-
-  res.render('index', {
-    photos
+app.use(fileUpload());
+app.use(
+  methodOverride('_method', {
+    methods: ['POST', 'GET'],
   })
-});
+);
 
-app.get('/about', (req, res) => {
-  res.render('about');
-});
+//ROUTES
+app.get('/', photoController.getAllPhotos);
+app.get('/photos/:id', photoController.getPhoto);
+app.post('/photos', photoController.createPhoto);
+app.put('/photos/:id', photoController.updatePhoto);
+app.delete('/photos/:id', photoController.deletePhoto);
 
-app.get('/add', (req, res) => {
-  res.render('add');
-});
+app.get('/about', pageController.getAboutPage);
+app.get('/add', pageController.getAddPage);
+app.get('/photos/edit/:id', pageController.getEditPage);
 
-app.post('/photos', async (req, res) => {
-  
-  await Photo.create(req.body)
-  res.redirect('/')
-});
-
-const port = 3000;
-
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Sunucu ${port} portunda başlatıldı..`);
 });
