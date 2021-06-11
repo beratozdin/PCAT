@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const fileUpload = require('express-fileupload');
 const methodOverride = require('method-override');
 const ejs = require('ejs');
-const photoController = require('./controllers/photoController')
-const pageController = require('./controllers/pageController');
+const pageRoute = require('./routes/pageRoute');
+const photoRoute = require('./routes/photoRoute');
 
 const app = express();
 
@@ -13,6 +13,7 @@ mongoose.connect('mongodb://localhost/pcat-test-db', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
+  useCreateIndex: true
 }).then(()=> {
   console.log('DB CONNECTED!')
 }).catch((err)=> {
@@ -34,17 +35,11 @@ app.use(
 );
 
 //ROUTES
-app.get('/', photoController.getAllPhotos);
-app.get('/photos/:id', photoController.getPhoto);
-app.post('/photos', photoController.createPhoto);
-app.put('/photos/:id', photoController.updatePhoto);
-app.delete('/photos/:id', photoController.deletePhoto);
-
-app.get('/about', pageController.getAboutPage);
-app.get('/add', pageController.getAddPage);
-app.get('/photos/edit/:id', pageController.getEditPage);
+app.use('/', pageRoute);
+app.use('/photos', photoRoute);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Sunucu ${port} portunda başlatıldı..`);
 });
+
